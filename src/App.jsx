@@ -1,5 +1,10 @@
-import { lazy, Suspense, useEffect, useState } from "react";
-import { motion as Motion } from "framer-motion";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
+import {
+  motion as Motion,
+  useReducedMotion,
+  useScroll,
+  useTransform,
+} from "framer-motion";
 import profileImage from "./assets/profile.jpeg";
 import SectionSkeleton from "./components/SectionSkeleton";
 import { staggerContainer, staggerItem } from "./components/portfolioMotion";
@@ -44,8 +49,93 @@ const highlights = [
   },
 ];
 
+function clamp(value, min, max) {
+  return Math.min(Math.max(value, min), max);
+}
+
+function mix(start, end, progress) {
+  return start + (end - start) * progress;
+}
+
+function easeOutCubic(value) {
+  return 1 - (1 - value) ** 3;
+}
+
+function SnapshotCard({ className = "" }) {
+  return (
+    <div
+      className={`interactive-surface relative overflow-hidden rounded-[28px] border border-white/10 bg-gradient-to-br from-[#10141D] via-[#0B0E14] to-black p-6 ${className}`}
+    >
+      <div className="absolute -right-8 -top-8 h-28 w-28 rounded-full bg-[#F59E0B]/15 blur-2xl float-slow" />
+      <div className="absolute -left-8 bottom-0 h-24 w-24 rounded-full bg-[#2563EB]/15 blur-2xl float-soft" />
+      <div className="relative flex items-start justify-between gap-4">
+        <div className="flex-1">
+          <p className="text-[10px] font-bold uppercase tracking-[0.35em] text-white/35">Snapshot</p>
+          <h3 className="mt-3 text-2xl font-black uppercase">Building for internships and growth</h3>
+          <p className="mt-3 text-sm leading-7 text-white/65">
+            I care about polished UI, practical project depth, and creating work that communicates both
+            technical ability and product thinking.
+          </p>
+        </div>
+        <div className="float-soft h-24 w-24 overflow-hidden rounded-2xl border border-white/10 bg-black/40 shadow-[0_0_35px_rgba(245,158,11,0.12)] transition duration-500 hover:scale-[1.05] hover:shadow-[0_0_45px_rgba(245,158,11,0.18)]">
+          <img
+            src={profileImage}
+            alt="Harshith Ambati"
+            loading="eager"
+            fetchPriority="high"
+            className="h-full w-full object-cover object-top"
+          />
+        </div>
+      </div>
+      <div className="mt-6 grid grid-cols-3 gap-3">
+        <div className="interactive-surface rounded-2xl border border-white/10 bg-white/[0.03] p-3">
+          <p className="text-[10px] uppercase tracking-[0.28em] text-white/35">Role</p>
+          <p className="mt-2 text-xs font-bold uppercase text-white/80">Developer</p>
+        </div>
+        <div className="interactive-surface rounded-2xl border border-white/10 bg-white/[0.03] p-3">
+          <p className="text-[10px] uppercase tracking-[0.28em] text-white/35">Focus</p>
+          <p className="mt-2 text-xs font-bold uppercase text-white/80">React and ML</p>
+        </div>
+        <div className="interactive-surface rounded-2xl border border-white/10 bg-white/[0.03] p-3">
+          <p className="text-[10px] uppercase tracking-[0.28em] text-white/35">Status</p>
+          <p className="mt-2 text-xs font-bold uppercase text-[#10B981]">Open to work</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Portfolio() {
+  const prefersReducedMotion = useReducedMotion();
+  const snapshotTargetRef = useRef(null);
+  const headerRef = useRef(null);
   const [activeSection, setActiveSection] = useState("about");
+  const [introEnabled, setIntroEnabled] = useState(() => {
+    if (typeof window === "undefined") {
+      return false;
+    }
+
+    return window.location.hash.length <= 1 && window.scrollY < 24;
+  });
+  const [introReady, setIntroReady] = useState(() => typeof window !== "undefined");
+  const [viewportSize, setViewportSize] = useState(() => {
+    if (typeof window === "undefined") {
+      return { width: 0, height: 0 };
+    }
+
+    return { width: window.innerWidth, height: window.innerHeight };
+  });
+  const { scrollY } = useScroll();
+
+  useEffect(() => {
+    const updateViewport = () => {
+      setViewportSize({ width: window.innerWidth, height: window.innerHeight });
+    };
+
+    updateViewport();
+    window.addEventListener("resize", updateViewport);
+    return () => window.removeEventListener("resize", updateViewport);
+  }, []);
 
   useEffect(() => {
     let frameId = 0;
@@ -89,10 +179,160 @@ export default function Portfolio() {
     };
   }, []);
 
+  useEffect(() => {
+    let frameOne = 0;
+    let frameTwo = 0;
+
+    const resolveIntroState = () => {
+      const hasHash = window.location.hash.length > 1;
+      const shouldEnable = !prefersReducedMotion && !hasHash && window.scrollY < 24;
+
+      setIntroEnabled(shouldEnable);
+      setIntroReady(true);
+    };
+
+    frameOne = window.requestAnimationFrame(() => {
+      frameTwo = window.requestAnimationFrame(resolveIntroState);
+    });
+
+    return () => {
+      window.cancelAnimationFrame(frameOne);
+      window.cancelAnimationFrame(frameTwo);
+    };
+  }, [prefersReducedMotion]);
+
+  const isMobile = viewportSize.width > 0 && viewportSize.width < 768;
+  const introDistance = isMobile ? 160 : 210;
+  const introProgress = useTransform(scrollY, [0, introDistance], [0, 1]);
+  const easedIntroProgress = useTransform(introProgress, easeOutCubic);
+  const heroTextOpacity = useTransform(easedIntroProgress, [0, 0.55, 1], [0.14, 0.45, 1]);
+  const heroTextY = useTransform(easedIntroProgress, [0, 1], [28, 0]);
+  const heroTextBlur = useTransform(easedIntroProgress, [0, 1], [8, 0]);
+  const heroStatsOpacity = useTransform(easedIntroProgress, [0, 0.45, 1], [0.12, 0.4, 1]);
+  const introOverlayOpacity = useTransform(easedIntroProgress, [0, 0.72, 1], [0.58, 0.18, 0]);
+  const introOverlayBlur = useTransform(easedIntroProgress, [0, 1], [10, 0]);
+  const introCardOpacity = useTransform(easedIntroProgress, [0, 0.82, 1], [1, 0.94, 0]);
+  const settledCardOpacity = useTransform(easedIntroProgress, [0, 0.62, 1], [0, 0.12, 1]);
+  const introCardShadow = useTransform(easedIntroProgress, [0, 1], [0.32, 0.14]);
+  const introCardScale = useTransform(easedIntroProgress, [0, 1], [1, 0.985]);
+  const heroTextFilter = useTransform(heroTextBlur, (value) => `blur(${value}px)`);
+  const introOverlayFilter = useTransform(introOverlayBlur, (value) => `blur(${value}px)`);
+  const introCardBoxShadow = useTransform(
+    introCardShadow,
+    (value) => `0 40px 120px rgba(0, 0, 0, ${value}), 0 0 0 1px rgba(255,255,255,0.07)`
+  );
+
+  const introCardLeft = useTransform(scrollY, (latest) => {
+    const targetRect = snapshotTargetRef.current?.getBoundingClientRect();
+
+    if (!targetRect || viewportSize.width === 0) {
+      return 0;
+    }
+
+    const progress = easeOutCubic(clamp(latest / introDistance, 0, 1));
+    const expandedWidth = clamp(
+      Math.max(targetRect.width * (isMobile ? 1.04 : 1.18), 320),
+      Math.min(viewportSize.width - 24, isMobile ? viewportSize.width - 24 : 480),
+      viewportSize.width - 16
+    );
+    const startLeft = (viewportSize.width - expandedWidth) / 2;
+
+    return mix(startLeft, targetRect.left, progress);
+  });
+
+  const introCardTop = useTransform(scrollY, (latest) => {
+    const targetRect = snapshotTargetRef.current?.getBoundingClientRect();
+    const headerRect = headerRef.current?.getBoundingClientRect();
+
+    if (!targetRect || viewportSize.height === 0) {
+      return 0;
+    }
+
+    const progress = easeOutCubic(clamp(latest / introDistance, 0, 1));
+    const safeTop = (headerRect?.height ?? 72) + 18;
+    const expandedWidth = clamp(
+      Math.max(targetRect.width * (isMobile ? 1.04 : 1.18), 320),
+      Math.min(viewportSize.width - 24, isMobile ? viewportSize.width - 24 : 480),
+      viewportSize.width - 16
+    );
+    const aspectRatio = targetRect.height / targetRect.width || 1;
+    const expandedHeight = expandedWidth * aspectRatio;
+    const startTop = Math.max((viewportSize.height - expandedHeight) / 2, safeTop);
+    const endTop = Math.max(targetRect.top, safeTop);
+
+    return mix(startTop, endTop, progress);
+  });
+
+  const introCardWidth = useTransform(scrollY, (latest) => {
+    const targetRect = snapshotTargetRef.current?.getBoundingClientRect();
+
+    if (!targetRect || viewportSize.width === 0) {
+      return isMobile ? viewportSize.width - 24 : 420;
+    }
+
+    const progress = easeOutCubic(clamp(latest / introDistance, 0, 1));
+    const expandedWidth = clamp(
+      Math.max(targetRect.width * (isMobile ? 1.04 : 1.18), 320),
+      Math.min(viewportSize.width - 24, isMobile ? viewportSize.width - 24 : 480),
+      viewportSize.width - 16
+    );
+
+    return mix(expandedWidth, targetRect.width, progress);
+  });
+
+  const introCardHeight = useTransform(scrollY, (latest) => {
+    const targetRect = snapshotTargetRef.current?.getBoundingClientRect();
+
+    if (!targetRect || viewportSize.width === 0) {
+      return isMobile ? 320 : 360;
+    }
+
+    const progress = easeOutCubic(clamp(latest / introDistance, 0, 1));
+    const expandedWidth = clamp(
+      Math.max(targetRect.width * (isMobile ? 1.04 : 1.18), 320),
+      Math.min(viewportSize.width - 24, isMobile ? viewportSize.width - 24 : 480),
+      viewportSize.width - 16
+    );
+    const aspectRatio = targetRect.height / targetRect.width || 1;
+    const expandedHeight = expandedWidth * aspectRatio;
+
+    return mix(expandedHeight, targetRect.height, progress);
+  });
+
+  const showIntroLayer = introReady && introEnabled;
+
   return (
     <div className="min-h-screen bg-[#05070B] text-white selection:bg-[#F59E0B] selection:text-black">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(245,158,11,0.08),transparent_22%),radial-gradient(circle_at_top_left,rgba(59,130,246,0.08),transparent_18%)]" />
       <div className="pointer-events-none absolute inset-x-0 top-0 h-80 bg-[radial-gradient(circle_at_center,rgba(245,158,11,0.12),transparent_45%)] blur-3xl animate-ambient-pulse" />
+
+      {showIntroLayer && (
+        <>
+          <Motion.div
+            aria-hidden="true"
+            style={{
+              opacity: introOverlayOpacity,
+              backdropFilter: introOverlayFilter,
+            }}
+            className="pointer-events-none fixed inset-0 z-30 bg-[rgba(3,6,12,0.72)]"
+          />
+          <Motion.div
+            aria-hidden="true"
+            style={{
+              left: introCardLeft,
+              top: introCardTop,
+              width: introCardWidth,
+              height: introCardHeight,
+              opacity: introCardOpacity,
+              boxShadow: introCardBoxShadow,
+              scale: introCardScale,
+            }}
+            className="pointer-events-none fixed z-40"
+          >
+            <SnapshotCard className="h-full" />
+          </Motion.div>
+        </>
+      )}
 
       <div className="relative flex min-h-screen">
         <Motion.aside
@@ -155,10 +395,11 @@ export default function Portfolio() {
 
         <main className="flex-1">
           <Motion.header
+            ref={headerRef}
             initial={{ opacity: 0, y: -18 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-            className="sticky top-0 z-20 border-b border-white/10 bg-[#06080D]/85 backdrop-blur"
+            className="sticky top-0 z-50 border-b border-white/10 bg-[#06080D]/85 backdrop-blur"
           >
             <div className="flex flex-col gap-4 px-5 py-4 md:flex-row md:items-center md:justify-between md:px-8">
               <div className="flex items-center gap-3">
@@ -181,8 +422,21 @@ export default function Portfolio() {
           </Motion.header>
 
           <section id="about" className="px-5 py-8 md:px-8 md:py-10">
-            <div className="grid gap-6 border-b border-white/10 pb-8 xl:grid-cols-[1.25fr_0.75fr]">
-              <Motion.div initial="hidden" animate="visible" variants={staggerContainer(0.08, 0.08)}>
+            <div className="grid gap-6 border-b border-white/10 pb-8 xl:grid-cols-[1.25fr_0.75fr] xl:items-center">
+              <Motion.div
+                initial="hidden"
+                animate="visible"
+                variants={staggerContainer(0.08, 0.08)}
+                style={
+                  showIntroLayer
+                    ? {
+                        opacity: heroTextOpacity,
+                        y: heroTextY,
+                        filter: heroTextFilter,
+                      }
+                    : undefined
+                }
+              >
                 <Motion.div variants={staggerItem} className="mb-4 flex items-center gap-3">
                   <div className="h-2 w-10 bg-[#F59E0B]" />
                   <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-white/35">About Me</span>
@@ -211,55 +465,21 @@ export default function Portfolio() {
                 </Motion.div>
               </Motion.div>
 
-              <Motion.div
-                initial={{ opacity: 0, y: 24 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.14, ease: [0.22, 1, 0.36, 1] }}
-              >
-                <div className="interactive-surface relative overflow-hidden rounded-[28px] border border-white/10 bg-gradient-to-br from-[#10141D] via-[#0B0E14] to-black p-6">
-                  <div className="absolute -right-8 -top-8 h-28 w-28 rounded-full bg-[#F59E0B]/15 blur-2xl float-slow" />
-                  <div className="absolute -left-8 bottom-0 h-24 w-24 rounded-full bg-[#2563EB]/15 blur-2xl float-soft" />
-                  <div className="relative flex items-start justify-between gap-4">
-                    <div className="flex-1">
-                      <p className="text-[10px] font-bold uppercase tracking-[0.35em] text-white/35">Snapshot</p>
-                      <h3 className="mt-3 text-2xl font-black uppercase">Building for internships and growth</h3>
-                      <p className="mt-3 text-sm leading-7 text-white/65">
-                        I care about polished UI, practical project depth, and creating work that communicates both
-                        technical ability and product thinking.
-                      </p>
-                    </div>
-                    <div className="float-soft h-24 w-24 overflow-hidden rounded-2xl border border-white/10 bg-black/40 shadow-[0_0_35px_rgba(245,158,11,0.12)] transition duration-500 hover:scale-[1.05] hover:shadow-[0_0_45px_rgba(245,158,11,0.18)]">
-                      <img
-                        src={profileImage}
-                        alt="Harshith Ambati"
-                        loading="eager"
-                        fetchPriority="high"
-                        className="h-full w-full object-cover object-top"
-                      />
-                    </div>
-                  </div>
-                  <div className="mt-6 grid grid-cols-3 gap-3">
-                    <div className="interactive-surface rounded-2xl border border-white/10 bg-white/[0.03] p-3">
-                      <p className="text-[10px] uppercase tracking-[0.28em] text-white/35">Role</p>
-                      <p className="mt-2 text-xs font-bold uppercase text-white/80">Developer</p>
-                    </div>
-                    <div className="interactive-surface rounded-2xl border border-white/10 bg-white/[0.03] p-3">
-                      <p className="text-[10px] uppercase tracking-[0.28em] text-white/35">Focus</p>
-                      <p className="mt-2 text-xs font-bold uppercase text-white/80">React and ML</p>
-                    </div>
-                    <div className="interactive-surface rounded-2xl border border-white/10 bg-white/[0.03] p-3">
-                      <p className="text-[10px] uppercase tracking-[0.28em] text-white/35">Status</p>
-                      <p className="mt-2 text-xs font-bold uppercase text-[#10B981]">Open to work</p>
-                    </div>
-                  </div>
-                </div>
-              </Motion.div>
+              <div ref={snapshotTargetRef} className="relative">
+                <Motion.div
+                  style={showIntroLayer ? { opacity: settledCardOpacity } : undefined}
+                  className={showIntroLayer ? "will-change-[opacity]" : ""}
+                >
+                  <SnapshotCard />
+                </Motion.div>
+              </div>
             </div>
 
             <Motion.div
               initial="hidden"
               animate="visible"
               variants={staggerContainer(0.08, 0.24)}
+              style={showIntroLayer ? { opacity: heroStatsOpacity } : undefined}
               className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-4"
             >
               {stats.map((stat) => (
