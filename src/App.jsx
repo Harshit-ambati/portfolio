@@ -3,6 +3,7 @@ import {
   motion as Motion,
   useReducedMotion,
   useScroll,
+  useMotionValueEvent,
   useTransform,
 } from "framer-motion";
 import profileImage from "./assets/profile.jpeg";
@@ -110,14 +111,9 @@ export default function Portfolio() {
   const snapshotTargetRef = useRef(null);
   const headerRef = useRef(null);
   const [activeSection, setActiveSection] = useState("about");
-  const [introEnabled, setIntroEnabled] = useState(() => {
-    if (typeof window === "undefined") {
-      return false;
-    }
-
-    return window.location.hash.length <= 1 && window.scrollY < 24;
-  });
-  const [introReady, setIntroReady] = useState(() => typeof window !== "undefined");
+  const [introEnabled, setIntroEnabled] = useState(false);
+  const [introReady, setIntroReady] = useState(false);
+  const [introDismissed, setIntroDismissed] = useState(false);
   const [viewportSize, setViewportSize] = useState(() => {
     if (typeof window === "undefined") {
       return { width: 0, height: 0 };
@@ -180,19 +176,49 @@ export default function Portfolio() {
   }, []);
 
   useEffect(() => {
+    const hasHash = window.location.hash.length > 1;
+    const introSessionKey = "portfolio-intro-seen";
+    const hasSeenIntro = window.sessionStorage.getItem(introSessionKey) === "true";
+    const shouldPlayIntro = !prefersReducedMotion && !hasHash && !hasSeenIntro;
     let frameOne = 0;
     let frameTwo = 0;
 
-    const resolveIntroState = () => {
-      const hasHash = window.location.hash.length > 1;
-      const shouldEnable = !prefersReducedMotion && !hasHash && window.scrollY < 24;
-
+    const finalizeIntroState = () => {
+      const shouldEnable = shouldPlayIntro && window.scrollY < 24;
       setIntroEnabled(shouldEnable);
       setIntroReady(true);
+      setIntroDismissed(!shouldEnable);
+
+      if (shouldPlayIntro) {
+        window.sessionStorage.setItem(introSessionKey, "true");
+      }
     };
 
+    if ("scrollRestoration" in window.history) {
+      const previous = window.history.scrollRestoration;
+      window.history.scrollRestoration = hasHash ? previous : "manual";
+
+      if (shouldPlayIntro) {
+        window.scrollTo(0, 0);
+      }
+
+      frameOne = window.requestAnimationFrame(() => {
+        frameTwo = window.requestAnimationFrame(finalizeIntroState);
+      });
+
+      return () => {
+        window.cancelAnimationFrame(frameOne);
+        window.cancelAnimationFrame(frameTwo);
+        window.history.scrollRestoration = previous;
+      };
+    }
+
+    if (shouldPlayIntro) {
+      window.scrollTo(0, 0);
+    }
+
     frameOne = window.requestAnimationFrame(() => {
-      frameTwo = window.requestAnimationFrame(resolveIntroState);
+      frameTwo = window.requestAnimationFrame(finalizeIntroState);
     });
 
     return () => {
@@ -221,6 +247,17 @@ export default function Portfolio() {
     introCardShadow,
     (value) => `0 40px 120px rgba(0, 0, 0, ${value}), 0 0 0 1px rgba(255,255,255,0.07)`
   );
+
+  useMotionValueEvent(scrollY, "change", (latest) => {
+    if (!introEnabled || introDismissed) {
+      return;
+    }
+
+    if (latest > introDistance * 0.92) {
+      setIntroDismissed(true);
+      setIntroEnabled(false);
+    }
+  });
 
   const introCardLeft = useTransform(scrollY, (latest) => {
     const targetRect = snapshotTargetRef.current?.getBoundingClientRect();
@@ -299,7 +336,7 @@ export default function Portfolio() {
     return mix(expandedHeight, targetRect.height, progress);
   });
 
-  const showIntroLayer = introReady && introEnabled;
+  const showIntroLayer = introReady && introEnabled && !introDismissed;
 
   return (
     <div className="min-h-screen bg-[#05070B] text-white selection:bg-[#F59E0B] selection:text-black">
