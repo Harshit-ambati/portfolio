@@ -299,7 +299,7 @@ export default function ProjectsSection() {
   }, []);
 
   return (
-    <SectionWrapper id="projects" className="px-5 py-8 md:px-8">
+    <SectionWrapper id="projects" className="px-5 py-8 md:px-8" amount={0.03}>
       <div className="mb-6 flex items-center justify-between gap-4 border-b border-white/10 pb-4">
         <div>
           <p className="text-[10px] font-bold uppercase tracking-[0.35em] text-white/35">Selected Work</p>
@@ -314,7 +314,7 @@ export default function ProjectsSection() {
         variants={staggerContainer(0.1, 0.06)}
         initial="hidden"
         whileInView="visible"
-        viewport={{ once: true, amount: 0.15 }}
+        viewport={{ once: true, amount: 0.03 }}
         className="grid gap-6 overflow-visible xl:grid-cols-2"
       >
         {projects.map((project) => (
