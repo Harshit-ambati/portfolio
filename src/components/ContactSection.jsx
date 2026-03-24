@@ -1,4 +1,5 @@
 import { motion as Motion } from "framer-motion";
+import { FiGithub, FiLinkedin, FiMail, FiMapPin } from "react-icons/fi";
 import SectionWrapper from "./SectionWrapper";
 import { staggerContainer, staggerItem } from "./portfolioMotion";
 
@@ -7,22 +8,26 @@ const contactCards = [
     title: "Email",
     value: "harshit.ambati76@gmail.com",
     href: "mailto:harshit.ambati76@gmail.com",
+    icon: FiMail,
   },
   {
     title: "Location",
     value: "India",
+    icon: FiMapPin,
   },
   {
     title: "GitHub",
     value: "github.com/Harshit-ambati",
     href: "https://github.com/Harshit-ambati",
     external: true,
+    icon: FiGithub,
   },
   {
     title: "LinkedIn",
     value: "linkedin.com/in/ambati-harshit-3211s",
     href: "https://www.linkedin.com/in/ambati-harshit-3211s?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app",
     external: true,
+    icon: FiLinkedin,
   },
 ];
 
@@ -49,23 +54,34 @@ export default function ContactSection() {
             viewport={{ once: true, amount: 0.2 }}
             className="grid gap-4 md:grid-cols-2"
           >
-            {contactCards.map((card) => (
-              <Motion.div key={card.title} variants={staggerItem} className="interactive-surface border border-white/5 bg-black/40 p-4">
-                <p className="text-xs font-bold uppercase tracking-[0.3em] text-white/35">{card.title}</p>
-                {card.href ? (
-                  <a
-                    href={card.href}
-                    target={card.external ? "_blank" : undefined}
-                    rel={card.external ? "noreferrer" : undefined}
-                    className="mt-3 block text-sm font-semibold text-white/80 transition hover:text-[#F59E0B]"
-                  >
-                    {card.value}
-                  </a>
-                ) : (
-                  <p className="mt-3 text-sm font-semibold text-white/80">{card.value}</p>
-                )}
-              </Motion.div>
-            ))}
+            {contactCards.map((card) => {
+              const Icon = card.icon;
+
+              return (
+                <Motion.div key={card.title} variants={staggerItem} className="interactive-surface border border-white/5 bg-black/40 p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.03]">
+                      <Icon className="text-lg text-[#F59E0B]" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold uppercase tracking-[0.3em] text-white/35">{card.title}</p>
+                      {card.href ? (
+                        <a
+                          href={card.href}
+                          target={card.external ? "_blank" : undefined}
+                          rel={card.external ? "noreferrer" : undefined}
+                          className="mt-3 block break-words text-sm font-semibold text-white/80 transition hover:text-[#F59E0B]"
+                        >
+                          {card.value}
+                        </a>
+                      ) : (
+                        <p className="mt-3 text-sm font-semibold text-white/80">{card.value}</p>
+                      )}
+                    </div>
+                  </div>
+                </Motion.div>
+              );
+            })}
           </Motion.div>
         </div>
 

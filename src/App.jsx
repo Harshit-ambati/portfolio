@@ -12,6 +12,7 @@ import { staggerContainer, staggerItem } from "./components/portfolioMotion";
 
 const ProjectsSection = lazy(() => import("./components/ProjectsSection"));
 const CertificatesSection = lazy(() => import("./components/CertificatesSection"));
+const EducationSection = lazy(() => import("./components/EducationSection"));
 const SkillsSection = lazy(() => import("./components/SkillsSection"));
 const ResumeSection = lazy(() => import("./components/ResumeSection"));
 const ContactSection = lazy(() => import("./components/ContactSection"));
@@ -19,8 +20,9 @@ const ContactSection = lazy(() => import("./components/ContactSection"));
 const navItems = [
   { id: "about", label: "About" },
   { id: "projects", label: "Projects" },
-  { id: "certificates", label: "Certificates" },
   { id: "skills", label: "Skills" },
+  { id: "certificates", label: "Certificates" },
+  { id: "education", label: "Education" },
   { id: "resume", label: "Resume" },
   { id: "contact", label: "Contact" },
 ];
@@ -35,7 +37,7 @@ const stats = [
 const highlights = [
   {
     title: "Education",
-    detail: "Computer Science student building practical projects across frontend and machine learning.",
+    detail: "B.Tech CSE student at Lovely Professional University specializing in Artificial Intelligence and Machine Learning.",
     accent: "border-l-[#2563EB]",
   },
   {
@@ -415,15 +417,6 @@ export default function Portfolio() {
             </nav>
           </div>
 
-          <div className="px-6">
-            <div className="interactive-surface rounded-2xl border border-white/10 bg-white/[0.03] p-3.5">
-              <p className="text-[10px] font-bold uppercase tracking-[0.35em] text-white/35">Current Focus</p>
-              <p className="mt-3 text-sm leading-6 text-white/70">
-                Building polished frontend interfaces and practical ML applications for real-world use.
-              </p>
-            </div>
-          </div>
-
           <div className="mt-auto border-t border-white/10 px-6 py-4">
             <p className="text-[13px] font-extrabold uppercase tracking-[0.16em]">Open to internships and junior roles</p>
             <p className="mt-2 text-xs uppercase tracking-[0.22em] text-white/40">Frontend, React, ML projects</p>
@@ -479,12 +472,12 @@ export default function Portfolio() {
                   <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-white/35">About Me</span>
                 </Motion.div>
                 <Motion.h1 variants={staggerItem} className="text-4xl font-black uppercase leading-none md:text-6xl">
-                  Frontend Developer and AiML Engineer
+                  Frontend Developer and AI ML Engineer
                 </Motion.h1>
                 <Motion.p variants={staggerItem} className="mt-4 max-w-3xl text-sm leading-7 text-white/65 md:text-base">
-                  I am a Computer Science student focused on building useful products with clean interfaces and
-                  practical engineering. My work sits at the intersection of modern frontend development, machine
-                  learning, and product-minded execution.
+                  I am a B.Tech Computer Science student at Lovely Professional University, specializing in
+                  Artificial Intelligence and Machine Learning. My work sits at the intersection of modern frontend
+                  development, machine learning, and product-minded execution.
                 </Motion.p>
                 <Motion.div variants={staggerItem} className="mt-6 flex flex-wrap gap-3">
                   <a
@@ -552,15 +545,16 @@ export default function Portfolio() {
                   <div className="interactive-surface border border-white/5 bg-black/50 p-5">
                     <p className="text-sm font-black uppercase tracking-[0.25em] text-[#F59E0B]">What I am working toward</p>
                     <p className="mt-4 text-sm leading-7 text-white/70">
-                      I am building a portfolio that reflects real problem solving, cleaner frontend craft, and steady
-                      growth as an engineer. I enjoy projects where design quality and technical depth support each other.
+                      I am building a portfolio that reflects real problem solving, strong frontend craft, and steady
+                      growth as an AI and ML-focused engineer. I enjoy projects where design quality and technical depth
+                      support each other.
                     </p>
                   </div>
 
                   <div className="grid gap-4 md:grid-cols-2">
                     <div className="interactive-surface border border-white/5 bg-black/50 p-5">
                       <p className="text-xs font-bold uppercase tracking-[0.3em] text-white/35">Primary Focus</p>
-                      <p className="mt-3 text-lg font-extrabold uppercase">Frontend and ML products</p>
+                      <p className="mt-3 text-lg font-extrabold uppercase">Frontend and AI ML products</p>
                     </div>
                     <div className="interactive-surface border border-white/5 bg-black/50 p-5">
                       <p className="text-xs font-bold uppercase tracking-[0.3em] text-white/35">Current Goal</p>
@@ -602,12 +596,16 @@ export default function Portfolio() {
             <ProjectsSection />
           </Suspense>
 
+          <Suspense fallback={<SectionSkeleton title="Skills" cards={4} />}>
+            <SkillsSection />
+          </Suspense>
+
           <Suspense fallback={<SectionSkeleton title="Certificates" cards={3} />}>
             <CertificatesSection />
           </Suspense>
 
-          <Suspense fallback={<SectionSkeleton title="Skills" cards={4} />}>
-            <SkillsSection />
+          <Suspense fallback={<SectionSkeleton title="Education" cards={2} compact />}>
+            <EducationSection />
           </Suspense>
 
           <Suspense fallback={<SectionSkeleton title="Resume" cards={2} compact />}>
