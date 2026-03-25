@@ -8,6 +8,8 @@ const educationEntries = [
     location: "Phagwara, Punjab",
     program: "B.Tech in Computer Science (Artificial Intelligence & Machine Learning)",
     period: "Since Aug 2023",
+    scoreLabel: "CGPA",
+    score: "8.4",
     accent: "from-[#2563EB] to-[#06B6D4]",
   },
   {
@@ -15,6 +17,8 @@ const educationEntries = [
     location: "Vijayawada, Andhra Pradesh",
     program: "Intermediate",
     period: "Jun 2021 - Apr 2023",
+    scoreLabel: "Percentage",
+    score: "96.7%",
     accent: "from-[#F59E0B] to-[#D97706]",
   },
   {
@@ -22,6 +26,8 @@ const educationEntries = [
     location: "Tadepalligudem, Andhra Pradesh",
     program: "Matriculation (CBSE)",
     period: "2021",
+    scoreLabel: "Percentage",
+    score: "90%",
     accent: "from-[#10B981] to-[#059669]",
   },
 ];
@@ -96,6 +102,11 @@ export default function EducationSection() {
                       <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/35">{entry.location}</p>
                       <h4 className="mt-2 text-xl font-black uppercase">{entry.institution}</h4>
                       <p className="mt-2 text-sm leading-6 text-white/72">{entry.program}</p>
+                      {entry.score ? (
+                        <p className="mt-3 text-xs font-bold uppercase tracking-[0.24em] text-[#86EFAC]">
+                          {entry.scoreLabel}: {entry.score}
+                        </p>
+                      ) : null}
                     </div>
                     <span className="rounded-full bg-[#F59E0B]/12 px-3 py-1 text-[10px] font-black uppercase tracking-[0.25em] text-[#FCD34D]">
                       {entry.period}
