@@ -1,5 +1,5 @@
 import { motion as Motion } from "framer-motion";
-import { FaCode, FaCss3Alt, FaJava, FaNodeJs, FaPython, FaReact } from "react-icons/fa";
+import { FaCode, FaCss3Alt, FaDatabase, FaJava, FaNodeJs, FaPython, FaReact } from "react-icons/fa";
 import {
   SiExpress,
   SiFastapi,
@@ -37,6 +37,7 @@ const skills = [
       { name: "Java", icon: FaJava, color: "text-[#F97316]" },
       { name: "Python", icon: FaPython, color: "text-[#FACC15]" },
       { name: "JavaScript", icon: SiJavascript, color: "text-[#FACC15]" },
+      { name: "SQL", icon: FaDatabase, color: "text-[#38BDF8]" },
     ],
   },
   {
