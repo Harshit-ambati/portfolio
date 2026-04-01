@@ -25,7 +25,7 @@ const educationEntries = [
     institution: "Vasavi Ideal Public School",
     location: "Tadepalligudem, Andhra Pradesh",
     program: "Matriculation (CBSE)",
-    period: "2021",
+    period: "Apr 2021",
     scoreLabel: "Percentage",
     score: "90%",
     accent: "from-[#10B981] to-[#059669]",
